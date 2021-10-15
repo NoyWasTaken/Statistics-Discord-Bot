@@ -1,0 +1,28 @@
+{
+  "name": "statistics-discord-bot",
+  "version": "1.0.0",
+  "description": "A simple statistics bot for discord collecting information about a client's daily replies and messages seperated by servers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NoyWasTaken/Statistics-Discord-Bot.git"
+  },
+  "keywords": [
+    "statistics",
+    "stats",
+    "bot",
+    "discord"
+  ],
+  "author": "Noy \"NoyB\" Bueno",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NoyWasTaken/Statistics-Discord-Bot/issues"
+  },
+  "homepage": "https://github.com/NoyWasTaken/Statistics-Discord-Bot#readme",
+  "dependencies": {
+    "discord.js": "^13.2.0"
+  }
+}
