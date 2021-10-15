@@ -30,6 +30,8 @@ The system will use a config file (JSON formatted) to receive the details of the
 ###### server - int
 ###### user - int 
 ###### messages - int
+###### - replies - int
+###### - last_update - int
 
 # Dev Notes
 Running and developing the bot will be using Git to manage the code.
@@ -37,5 +39,3 @@ The master branch will reflect the production and a branch named "develop" will 
 For each feature, bug fix or any change after the upload for production will be in different branches and merged into the develop branch.
 For every release and update there will be a merge request from the develop to the master branch that will need approval of the project's manager.
 The bot will be written in NodeJS using the latest Discord.JS library
-###### - replies - int
-###### - last_update - int
