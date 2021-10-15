@@ -30,8 +30,8 @@ The system will use a config file (JSON formatted) to receive the details of the
 ###### server - int
 ###### user - int 
 ###### messages - int
-###### - replies - int
-###### - last_update - int
+###### replies - int
+###### last_update - int
 
 # Dev Notes
 Running and developing the bot will be using Git to manage the code.
