@@ -78,7 +78,7 @@ client.on('messageCreate', async message => {
 			client.collectedData[message.guild.id] = {}
 
 		if(!client.collectedData[message.guild.id][message.member.id])
-			client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0};
+			client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0, "last_update": 0};
 
 		if(message.type == "REPLY")
 			client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
