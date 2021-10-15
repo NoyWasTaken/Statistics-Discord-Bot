@@ -25,10 +25,11 @@ The bot will be provided with commands to reset the statistics of a user - the e
 # Tables
 Tables of the database will be openned automatticly by using the code.
 The system will use a config file (JSON formatted) to receive the details of the database and by using them it will create a connection and send the required queries such as table creations, data update or insert and so.
-###### - id - int auto increment
-###### - server - int
-###### - user - int 
-###### - messages - int
+## logs
+###### id - int auto increment
+###### server - int
+###### user - int 
+###### messages - int
 
 # Dev Notes
 Running and developing the bot will be using Git to manage the code.
