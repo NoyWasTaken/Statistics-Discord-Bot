@@ -1,5 +1,5 @@
 # Discord Statistics Bot
-
+A simple statistics bot for discord collecting information about a client's daily replies and messages seperated by servers.
 # Opreation
 The bot will run using a MySQL database to collect and save it's data.
 
