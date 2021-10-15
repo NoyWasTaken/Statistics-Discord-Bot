@@ -18,7 +18,7 @@ The bot will be provided with commands to reset the statistics of a user - the e
 - stats @user day/week/month/year/all
 - stats @user {START_DATE} {END_DATE}
 - resetstats @user day/week/month/year/all
-- resetstats @iser {START_DATE} {END_DATE}
+- resetstats @user {START_DATE} {END_DATE}
 - resetstats_all
 ```
 
