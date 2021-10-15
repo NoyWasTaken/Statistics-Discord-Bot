@@ -17,6 +17,8 @@ client.database = mysql.createConnection({
 	database: client.settings.mysql_dbname
 })
 
+client.collectedData = {}
+
 client.log = (message) => {
 	var formattedDate = new Date().toISOString().
 	replace(/T/, ' ').      // replace T with a space
@@ -70,6 +72,18 @@ client.on('messageCreate', async message => {
 		
 		var cmd = client.commands.get(cont[0]);
 		if(cmd) cmd.run(client, message, args);
+	} else {
+		// ignore commands while collecting statistics data
+		if(!client.collectedData[message.guild.id])
+			client.collectedData[message.guild.id] = {}
+
+		if(!client.collectedData[message.guild.id][message.member.id])
+			client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0};
+
+		if(message.type == "REPLY")
+			client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
+		else
+			client.collectedData[message.guild.id][message.member.id]["messages"] = client.collectedData[message.guild.id][message.member.id]["messages"] + 1;
 	}
 });
 
