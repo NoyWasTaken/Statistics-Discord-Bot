@@ -17,7 +17,7 @@ module.exports = async (client) => {
         client.log("Openned connection successfully.");
 
         client.log("Trying to create MySQL tables.");
-        client.database.query("CREATE TABLE IF NOT EXISTS `logs` (`id` INT(10) NOT NULL PRIMARY KEY AUTO_INCREMENT, `server` BIGINT(10) NOT NULL, `user` BIGINT(10) NOT NULL, `messages` INT(10) NOT NULL, `replies` INT(10) NOT NULL, `last_update` BIGINT(10) NOT NULL, UNIQUE(`server`, `user`))", function(error, results, fields) {
+        client.database.query("CREATE TABLE IF NOT EXISTS `logs` (`id` INT(10) NOT NULL PRIMARY KEY AUTO_INCREMENT, `date` VARCHAR(32) NOT NULL, `server` BIGINT(10) NOT NULL, `user` BIGINT(10) NOT NULL, `messages` INT(10) NOT NULL, `replies` INT(10) NOT NULL, `last_update` BIGINT(10) NOT NULL, UNIQUE(`date`, `server`, `user`))", function(error, results, fields) {
             if(error) client.log(`Failed to create MySQL table: ${error}`);
 
             client.log("Table created successfully.");
@@ -29,7 +29,7 @@ module.exports = async (client) => {
     client.log("Trying to fetch existing data from database ...");
     try
     {
-        client.database.query("SELECT `server`, `user`, `messages`, `replies`, `last_update` FROM `logs`", function(error, results, fields) {
+        client.database.query("SELECT `server`, `user`, `last_update` FROM `logs` WHERE `date` = ?", [client.formatDate()], function(error, results, fields) {
             if(error)
             {
                 client.log(`Failed to fetch data from database: ${error}`);
@@ -38,8 +38,8 @@ module.exports = async (client) => {
                     if(!client.collectedData[row.server])
                         client.collectedData[row.server] = {}
                     
-                    client.log(`Fetched data for member: ${row.user} on guild ${row.server}: Messages: ${row.messages}, Replies: ${row.replies}, Last Update: ${row.last_update}`);
-                    client.collectedData[row.server][row.user] = {"messages": row.messages, "replies": row.replies, "last_update": row.last_update};
+                    client.log(`Fetched data for member: ${row.user} on guild ${row.server}: Last Update: ${row.last_update}`);
+                    client.collectedData[row.server][row.user] = {"messages": 0, "replies": 0, "last_update": row.last_update};
                 });
             }
         });
@@ -56,21 +56,21 @@ module.exports = async (client) => {
                     force: true
                 }).then(messages => {
                     messages.forEach(message => {
-                        if(!message.member || message.author.bot)
-                            continue; // ignore messages from bots or webhooks
-
-                        if(!client.collectedData[message.guild.id])
-                            client.collectedData[message.guild.id] = {}
-
-                        if(!client.collectedData[message.guild.id][message.member.id])
-                            client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0, "last_update": 0};
-
-                        if(message.createdTimestamp > client.collectedData[message.guild.id][message.member.id]["last_update"])
+                        if(message.member && !message.author.bot)
                         {
-                            if(message.type == "REPLY")
-                                client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
-                            else
-                                client.collectedData[message.guild.id][message.member.id]["messages"] = client.collectedData[message.guild.id][message.member.id]["messages"] + 1;
+                            if(!client.collectedData[message.guild.id])
+                                client.collectedData[message.guild.id] = {}
+
+                            if(!client.collectedData[message.guild.id][message.member.id])
+                                client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0, "last_update": 0};
+
+                            if(message.createdTimestamp > client.collectedData[message.guild.id][message.member.id]["last_update"])
+                            {
+                                if(message.type == "REPLY")
+                                    client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
+                                else
+                                    client.collectedData[message.guild.id][message.member.id]["messages"] = client.collectedData[message.guild.id][message.member.id]["messages"] + 1;
+                            }
                         }
                     });
                 })
@@ -87,8 +87,8 @@ module.exports = async (client) => {
                 client.log(`Updating collected data for member ${memberId} on guild ${guildId}. Messages: ${memberData["messages"]}, Replies: ${memberData["replies"]}`);
                 
                 var timeStamp = new Date().getTime();
-                client.database.query("INSERT INTO `logs` (`server`, `user`, `messages`, `replies`, `last_update`) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `messages` = `messages` + ?, `replies` = `replies` + ?", 
-                [guildId, memberId, memberData["messages"], memberData["replies"], timeStamp, memberData["messages"], memberData["replies"]], function(error, results, fields) {
+                client.database.query("INSERT INTO `logs` (`server`, `user`, `messages`, `replies`, `last_update`, `date`) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `messages` = `messages` + ?, `replies` = `replies` + ?", 
+                [guildId, memberId, memberData["messages"], memberData["replies"], timeStamp, client.formatDate(), memberData["messages"], memberData["replies"]], function(error, results, fields) {
                     if(error) 
                     {
                         client.log(`Failed to update data: ${error}`);

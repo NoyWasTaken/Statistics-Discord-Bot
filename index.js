@@ -24,7 +24,11 @@ client.log = (message) => {
 	replace(/T/, ' ').      // replace T with a space
 	replace(/\..+/, '')
 
-	console.log(`[${formattedDate}] ${message}`)
+	console.log(`[${formattedDate}] ${message}`);
+}
+
+client.formatDate = (date=null) => {
+	return date != null ? date.toLocaleDateString("en-US") : new Date().toLocaleDateString('en-US');
 }
 
 fs.readdir('./commands/', (err, files) => {
