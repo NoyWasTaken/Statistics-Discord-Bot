@@ -12,7 +12,7 @@ module.exports.run = async(client, message, args) => {
 
     if(target !== undefined)
     {
-        var startDate = client.formatDate();
+        var startDate = "";
         var endDate = "";
         if(args.length == 3)
         {
@@ -22,30 +22,66 @@ module.exports.run = async(client, message, args) => {
             startDate = args[1];
             endDate = args[2];
         } else {
+            endDate = client.formatDate();
 
+            startDateObj = new Date();
+
+            switch(args[1])
+            {
+                case "day":
+                    startDateObj.setDate(startDateObj.getDate() - 1);
+                    break;
+
+                case "week":
+                    startDateObj.setDate(startDateObj.getDate() - 7);
+                    break;
+
+                case "month":
+                    startDateObj.setDate(startDateObj.getDate() - 30);
+                    break;
+
+                case "year":
+                    startDateObj.setDate(startDateObj.getDate() - 365);
+                    break;
+            }
+
+            startDate = client.formatDate(startDateObj);
         }
 
-        var startDateStamp = new Date(startDate);
-        startDateStamp.setDate(startDateStamp.getDate());
+        message.channel.send("מושך נתונים מהמערכת ...")
+        .then(async (msg) => {
+            var startDateStamp = new Date(startDate);
+            var endDateStamp = new Date(endDate);
 
-        var endDateStamp = new Date(endDate);
-        endDateStamp.setDate(endDateStamp.getDate() + 1);
+            var daysBetween = (endDateStamp.getTime() - startDateStamp.getTime()) / (1000 * 3600 * 24);
 
-        var messages = 0;
-        var replies = 0;
+            var messages = 0;
+            var replies = 0;
+            var dataFetched = 0;
 
-        client.database.query("SELECT `messages`, `replies`, `last_update` FROM `logs` WHERE `date` >= ? AND `date` <= ? AND `server` = ? AND `user` = ?", [client.formatDate(startDateStamp), client.formatDate(endDateStamp), message.guild.id, message.member.id], function(error, results, fields) {
-            if(error)
+            do
             {
-                client.log(`Failed to fetch data from database: ${error}`);
-            } else {
-                results.forEach(result => {
-                    messages = messages + result.messages;
-                    replies = replies + result.replies;
+                var query = await client.database.query("SELECT `messages`, `replies`, `last_update` FROM `logs` WHERE `date` = ? AND `server` = ? AND `user` = ?", [client.formatDate(startDateStamp), message.guild.id, message.member.id], function(error, results, fields) {
+                    if(results[0])
+                    {
+                        messages = messages + results[0].messages;
+                        replies = replies + results[0].replies;
+                    }
+
+                    dataFetched = dataFetched + 1;
                 });
 
-                return message.reply(`מציג נתונים עבור: ${target.toString()} על טווח תאריכים: ${startDate} - ${endDate}\nהודעות: ${messages}\nתגובות: ${replies}`);
+                startDateStamp.setDate(startDateStamp.getDate() + 1);
+            } while (startDateStamp.getTime() <= endDateStamp.getTime())
+
+            const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+            while(dataFetched < daysBetween)
+            {
+                // await causing problems and I'm too lazy to check lol
+                await delay(1000);
             }
+
+            msg.edit(`מציג נתונים עבור: ${target.toString()} על טווח תאריכים: ${startDate} - ${endDate}\nהודעות: ${messages}\nתגובות: ${replies}`);
         });
     }
 }

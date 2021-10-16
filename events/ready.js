@@ -29,7 +29,7 @@ module.exports = async (client) => {
     client.log("Trying to fetch existing data from database ...");
     try
     {
-        client.database.query("SELECT `server`, `user`, `last_update` FROM `logs` WHERE `date` = ?", [client.formatDate()], function(error, results, fields) {
+        client.database.query("SELECT `user`, `server`, `last_update` FROM `logs` WHERE `date` = ?", [client.formatDate()], function(error, results, fields) {
             if(error)
             {
                 client.log(`Failed to fetch data from database: ${error}`);
@@ -41,42 +41,42 @@ module.exports = async (client) => {
                     client.log(`Fetched data for member: ${row.user} on guild ${row.server}: Last Update: ${row.last_update}`);
                     client.collectedData[row.server][row.user] = {"messages": 0, "replies": 0, "last_update": row.last_update};
                 });
+
+                client.guilds.cache.forEach(guild => {
+                    guild.channels.cache.forEach(channel => {
+                        if(channel.messages)
+                        {
+                            channel.messages.fetch(undefined, {
+                                cache: false,
+                                force: true
+                            }).then(messages => {
+                                messages.forEach(message => {
+                                    if(message.member && !message.author.bot && !client.IsCommand(message))
+                                    {
+                                        if(!client.collectedData[message.guild.id])
+                                            client.collectedData[message.guild.id] = {}
+            
+                                        if(!client.collectedData[message.guild.id][message.member.id])
+                                            client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0, "last_update": 0};
+            
+                                        if(message.createdTimestamp > client.collectedData[message.guild.id][message.member.id]["last_update"])
+                                        {
+                                            if(message.type == "REPLY")
+                                                client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
+                                            else
+                                                client.collectedData[message.guild.id][message.member.id]["messages"] = client.collectedData[message.guild.id][message.member.id]["messages"] + 1;
+                                        }
+                                    }
+                                });
+                            })
+                        }
+                    });
+                });
             }
         });
     } catch {
         client.log("Failed to fetch data from database.");
     }
-
-    client.guilds.cache.forEach(guild => {
-        guild.channels.cache.forEach(channel => {
-            if(channel.messages)
-            {
-                channel.messages.fetch(undefined, {
-                    cache: false,
-                    force: true
-                }).then(messages => {
-                    messages.forEach(message => {
-                        if(message.member && !message.author.bot)
-                        {
-                            if(!client.collectedData[message.guild.id])
-                                client.collectedData[message.guild.id] = {}
-
-                            if(!client.collectedData[message.guild.id][message.member.id])
-                                client.collectedData[message.guild.id][message.member.id] = {"messages": 0, "replies": 0, "last_update": 0};
-
-                            if(message.createdTimestamp > client.collectedData[message.guild.id][message.member.id]["last_update"])
-                            {
-                                if(message.type == "REPLY")
-                                    client.collectedData[message.guild.id][message.member.id]["replies"] = client.collectedData[message.guild.id][message.member.id]["replies"] + 1;
-                                else
-                                    client.collectedData[message.guild.id][message.member.id]["messages"] = client.collectedData[message.guild.id][message.member.id]["messages"] + 1;
-                            }
-                        }
-                    });
-                })
-            }
-        });
-    });
 
     setInterval(function()
     {
@@ -87,8 +87,8 @@ module.exports = async (client) => {
                 client.log(`Updating collected data for member ${memberId} on guild ${guildId}. Messages: ${memberData["messages"]}, Replies: ${memberData["replies"]}`);
                 
                 var timeStamp = new Date().getTime();
-                client.database.query("INSERT INTO `logs` (`server`, `user`, `messages`, `replies`, `last_update`, `date`) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `messages` = `messages` + ?, `replies` = `replies` + ?", 
-                [guildId, memberId, memberData["messages"], memberData["replies"], timeStamp, client.formatDate(), memberData["messages"], memberData["replies"]], function(error, results, fields) {
+                client.database.query("INSERT INTO `logs` (`server`, `user`, `messages`, `replies`, `last_update`, `date`) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE `messages` = `messages` + ?, `replies` = `replies` + ?, `last_update` = ?", 
+                [guildId, memberId, memberData["messages"], memberData["replies"], timeStamp, client.formatDate(), memberData["messages"], memberData["replies"], timeStamp], function(error, results, fields) {
                     if(error) 
                     {
                         client.log(`Failed to update data: ${error}`);

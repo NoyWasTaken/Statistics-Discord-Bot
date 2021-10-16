@@ -14,7 +14,9 @@ client.database = mysql.createConnection({
 	host: client.settings.mysql_host,
 	user: client.settings.mysql_user,
 	password: client.settings.mysql_pass,
-	database: client.settings.mysql_dbname
+	database: client.settings.mysql_dbname,
+	supportBigNumbers: true,
+	bigNumberStrings: true
 })
 
 client.collectedData = {}
@@ -69,7 +71,7 @@ client.on('messageCreate', async message => {
 	if(!message.channel || !message.member || message.author.bot)
 		return;
 	
-	if(IsCommand(message))
+	if(client.IsCommand(message))
 	{
 		var cont = message.content.slice(client.settings.prefix.length).split(" "); // removes prefix then giving an array, cont[0] = command. the rest is the args
 		var args = cont.slice(1);
@@ -91,7 +93,7 @@ client.on('messageCreate', async message => {
 	}
 });
 
-function IsCommand(message) {
+client.IsCommand = (message) => {
 	return message.content.toLowerCase().startsWith(client.settings.prefix);
 }
 
