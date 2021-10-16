@@ -47,45 +47,35 @@ module.exports.run = async(client, message, args) => {
             startDate = client.formatDate(startDateObj);
         }
 
-        message.channel.send("מושך נתונים מהמערכת ...")
+        message.channel.send("מבצע מחיקה לנתונים ...")
         .then(async (msg) => {
             var startDateStamp = new Date(startDate);
             var endDateStamp = new Date(endDate);
 
-            var daysBetween = (endDateStamp.getTime() - startDateStamp.getTime()) / (1000 * 3600 * 24);
-
-            var messages = 0;
-            var replies = 0;
-            var dataFetched = 0;
-
             do
             {
-                var query = await client.database.query("SELECT `messages`, `replies`, `last_update` FROM `logs` WHERE `date` = ? AND `server` = ? AND `user` = ?", [client.formatDate(startDateStamp), message.guild.id, message.member.id], function(error, results, fields) {
-                    if(results[0])
+                await client.database.query("UPDATE `logs` SET `messages` = 0, `replies` = 0 WHERE `date` = ? AND `server` = ? AND `user` = ?", [client.formatDate(startDateStamp), message.guild.id, message.member.id], function(error, results, fields) {
+                    if(error)
                     {
-                        messages = messages + results[0].messages;
-                        replies = replies + results[0].replies;
+                        msg.edit("אירעה שגיאת בעת מחיקת הנתונים.");
+                        return;
                     }
-
-                    dataFetched = dataFetched + 1;
                 });
-
+                if(client.formatDate(startDateStamp) == client.formatDate())
+                {
+                    client.collectedData[message.guild.id][message.member.id]["replies"] = 0;
+                    client.collectedData[message.guild.id][message.member.id]["messages"] = 0;
+                }
+                
                 startDateStamp.setDate(startDateStamp.getDate() + 1);
             } while (startDateStamp.getTime() <= endDateStamp.getTime())
 
-            const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-            while(dataFetched < daysBetween)
-            {
-                // await causing problems and I'm too lazy to check lol
-                await delay(1000);
-            }
-
-            msg.edit(`מציג נתונים עבור: ${target.toString()} על טווח תאריכים: ${startDate} - ${endDate}\nהודעות: ${messages}\nתגובות: ${replies}`);
+            msg.edit(`הנתונים של: ${target.toString()} בטווח התאריכים: ${startDate} - ${endDate} אופסו.`);
         });
     }
 }
 
 module.exports.config = {
-    command: "stats",
+    command: "resetstats",
     description: ""
 }
