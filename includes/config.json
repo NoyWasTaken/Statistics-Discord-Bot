@@ -3,8 +3,8 @@
     "prefix": "!",
     "update_interval": 6000, 
 
-    "mysql_host": "185.185.134.10",
-    "mysql_user": "noy2",
-    "mysql_pass": "/DOIy/2DjrbUD_Hl",
-    "mysql_dbname": "noy2"
+    "mysql_host": "127.0.0.1",
+    "mysql_user": "changeme",
+    "mysql_pass": "changeme",
+    "mysql_dbname": "changeme"
 }
